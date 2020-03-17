@@ -1,0 +1,92 @@
+﻿@model ConfigurationViewModel
+
+@{
+    ViewData["Title"] = "Configuration";
+}
+
+<h1>Configuration Options</h1>
+
+<div class="row">
+    <div class="col-sm-3">
+        <div class="list-group list-group-flush">
+            @foreach (var productType in (ProductType[])Enum.GetValues(typeof(ProductType)))
+            {
+                <a asp-controller="Configuration"
+                   asp-route-SelectedProductType="@((int)productType)"
+                   class="list-group-item list-group-item-action @(Model.SelectedProductType == productType ? "active" : "")">
+                    @productType.GetDisplayName()
+                </a>
+
+                @if (Model.SelectedProductType == productType)
+                {
+
+                    <div class="list-group" style="margin-left: 30px;">
+                        @foreach (var field in Model.Options.Where(x => !String.IsNullOrEmpty(x.Name)).Select(x => x.FieldName).Distinct())
+                        {
+                            <a asp-controller="Configuration" 
+                                asp-route-SelectedProductType="@((int)productType)"
+                                asp-route-SelectedField="@field"                                
+                                class="list-group-item list-group-item-action @(Model.SelectedField == field ? "active" : "")">
+                                @field
+                                <span class="badge badge-primary badge-pill">@Model.Options.Count(x => x.FieldName == @field)</span>
+                            </a>
+                        }
+                    </div>
+
+                }
+            }
+        </div>
+    </div>
+    <div class="col-sm-9">
+        <div class="box" style="margin: 0px;">
+            <form method="post">
+                <div style="margin-bottom: 10px;">
+                    <a class="btn btn-success"
+                       asp-action="AddOptions"
+                       asp-controller="Configuration"
+                       asp-route-SelectedProductType="@((int)Model.SelectedProductType)"
+                       asp-route-SelectedField="@Model.SelectedField">Add More</a>
+
+                    <button class="btn btn-danger"
+                       asp-action="DeleteOptions"
+                       asp-controller="Configuration"
+                       asp-route-SelectedProductType="@((int)Model.SelectedProductType)"
+                       asp-route-SelectedField="@Model.SelectedField">Delete Selected</button>
+                </div>
+
+                @{
+                    var firstLetters = Model.Options
+                        .Where(x => x.FieldName == Model.SelectedField)
+                        .Select(x => x.Name[0])
+                        .Distinct()
+                        .ToList();
+
+                    char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+                }
+
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        @foreach (var letter in alpha)
+                        {
+                            <li class="page-item @(firstLetters.Contains(letter) ? "" : "disabled")">
+                                <a class="page-link" asp-controller="Configuration"
+                                   asp-route-SelectedProductType="@((int)Model.SelectedProductType)"
+                                   asp-route-SelectedField="@Model.SelectedField"
+                                   asp-route-SelectedLetter="@letter">@letter</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+
+                <ul class="list-group list-group-flush">
+                    @foreach (var option in Model.Options
+                     .Where(x => x.FieldName == Model.SelectedField &&
+                                 (x.Name[0] == Model.SelectedLetter || Model.SelectedLetter == null)))
+                    {
+                        <li class="list-group-item"><input type="checkbox" name="SelectedOptions" value="@option.Id" style="margin-right: 5px; width: 15px; height: 15px;" />@option.Name</li>
+                    }
+                </ul>
+            </form>
+        </div>
+    </div>
+</div>

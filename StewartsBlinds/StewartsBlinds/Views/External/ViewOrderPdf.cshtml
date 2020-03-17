@@ -1,0 +1,375 @@
+﻿@model Appointment
+
+@{ 
+    var appointment = Model;
+    Layout = "../Shared/_LightLayout.cshtml";
+}
+<style>
+    body {
+        font-family: "Arial";
+        font-size: 14px;
+        padding: 0px;
+    }
+
+    h3 {
+        text-align: center;
+        font-weight: bold;
+        font-size: 24px;
+    }
+
+    h4 {
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    p {
+        font-weight: bold;
+    }
+</style>
+<h3>ORDER FORM</h3>
+<div class="row">
+    <div class="col-sm-2">
+        <h4>CUSTOMER DETAILS</h4>
+        <p>
+            @appointment.Title @appointment.Surname <br />
+            @appointment.CompanyName <br />
+            @appointment.Address1 <br />
+            @appointment.Address2 <br />
+            @appointment.Town <br />
+            @appointment.County <br />
+            @appointment.Postcode <br />
+        </p>
+    </div>
+    <div class="col-sm-2">
+        <h4>DELIVERY ADDRESS</h4>
+        <p>
+            @if (appointment.SameAsOrderAddress)
+            {
+                <text>Same as order address</text>
+            }
+            else
+            {
+                @appointment.DeliveryAddress1 <br />
+                @appointment.DeliveryAddress2 <br />
+                @appointment.DeliveryTown <br />
+                @appointment.DeliveryCounty <br />
+                @appointment.DeliveryPostcode
+            }
+        </p>
+    </div>
+    <div class="col-sm-4">
+        <h4>CUSTOMER CONTACT DETAILS</h4>
+        <p>
+            Customer Telephone: @appointment.Telephone <br />
+            Customer Mobile: @appointment.AlternativeTelephone <br />
+            Customer Email: @appointment.Email
+        </p>
+    </div>
+    <div class="col-sm-4">
+        <h4></h4>
+        <p>
+            Estimator: @appointment.SalesUser.Name<br />
+            Order Date: @appointment.FinalisedDate.ToString("dd/MM/yyyy")<br />
+            Order Type: @appointment.CustomerType.GetDisplayName()<br />
+        </p>
+    </div>
+</div>
+<h3>ORDER DETAILS</h3>
+
+<table style="width: 100%;">
+    <thead>
+        <tr>
+            <th style="white-space:nowrap; font-size: 14px; width: 8.4%;">Room Ref</th>
+            <th style="white-space:nowrap; font-size: 14px; width: 8.4%;">Product Type</th>
+            <th style="white-space:nowrap; font-size: 14px; width: 8.4%;">Measurements</th>
+            <th style="white-space:nowrap; font-size: 14px; width: 8.4%;">Size Type</th>
+            <th style="white-space:nowrap; font-size: 14px; width: 66%;">Details</th>
+        </tr>
+    </thead>
+    @foreach (var line in appointment.QuoteLines)
+    {
+        <tr style="border-bottom: 1px solid;">
+            <td>@line.RoomRef</td>
+            <td>@line.ProductType.GetDisplayName()</td>
+            <td>@line.Width x @line.Drop</td>
+
+            <td>
+                @line.SizeType
+            </td>
+            <td>
+                <table style="width: 100%;">
+                    @if (line.ProductType == ProductType.Vertical)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Headrail Type: <b>@line.HeadrailType</b></td>
+                            <td style="width: 33%">Control Type: <b>@line.ControlType</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Control Side: <b>@line.ControlSide</b></td>
+                            <td style="width: 33%">Stacking: <b>@line.Stacking</b></td>
+                            <td style="width: 33%">Brackets: <b>@line.Brackets</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Weights & Chain: <b>@line.WeightsChain</b></td>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.VerticalSlats)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Number of Slats: <b>@line.NumberOfSlats</b></td>
+                            <td style="width: 33%">Sample Retained: <b>@line.SampleRetained</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Weights & Chain: <b>@line.WeightsChain</b></td>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.VerticalHeadrail)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%"> Type: <b>@line.HeadrailType</b></td>
+                            <td style="width: 33%">Control Type: <b>@line.ControlType</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Control Side: <b>@line.ControlSide</b></td>
+                            <td style="width: 66%" colspan="2">Stacking: <b>@line.Stacking</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.Roller)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                            <td style="width: 33%">Control: <b>@line.Control</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Brackets: <b>@line.Brackets</b></td>
+                            <td style="width: 33%">Scallop: <b>@line.Scallop</b></td>
+                            <td style="width: 33%">Braid: <b>@line.Braid</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Endcaps: <b>@line.Endcaps</b></td>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.AluminiumVenetian)
+                    {
+                        <tr>
+                            <td style="width: 33%">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Controls: <b>@line.Controls</b></td>
+                            <td style="width: 33%">Hold Down Brackets: <b>@line.HoldDownBrackets</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Slatting: <b>@line.Slatting</b></td>
+                            <td style="width: 66%" colspan="2">Slat Colour: <b>@line.SlatColour</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.WoodenVenetian)
+                    {
+                        <tr>
+                            <td style="width: 33%">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Slatting: <b>@line.Slatting</b></td>
+                            <td style="width: 33%">Controls: <b>@line.Controls</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Brackets: <b>@line.Brackets</b></td>
+                            <td style="width: 33%">Hold Down Brackets: <b>@line.HoldDownBrackets</b></td>
+                            <td style="width: 33%">Tape: <b>@line.Tape</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 66%" colspan="2">Slat Colour: <b>@line.SlatColour</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.Fauxwood)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Controls: <b>@line.Controls</b></td>
+                            <td style="width: 33%">Slatting: <b>@line.Slatting</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Hold Down Brackets: <b>@line.HoldDownBrackets</b></td>
+                            <td style="width: 33%">Tape: <b>@line.Tape</b></td>
+                            <td style="width: 33%">Slat Colour: <b>@line.SlatColour</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.Roman)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Controls: <b>@line.Controls</b></td>
+                            <td style="width: 33%">Lining: <b>@line.Lining</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.Pleated)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">System: <b>@line.System</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Controls: <b>@line.Controls</b></td>
+                            <td style="width: 33%">Brackets: <b>@line.Brackets</b></td>
+                            <td style="width: 33%">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.IntuVenetian)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">System: <b>@line.System</b></td>
+                            <td style="width: 33%">Bead Depth: <b>@line.BeadDepth</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Profile: <b>@line.Profile</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                            <td style="width: 33%">Slat Size: <b>@line.SlatSize</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Control: <b>@line.Control</b></td>
+                            <td style="width: 66%" colspan="2">Slat Colour: <b>@line.SlatColour</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.IntuPleated)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Bead Depth: <b>@line.BeadDepth</b></td>
+                            <td style="width: 33%">Profile: <b>@line.Profile</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">System: <b>@line.System</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                            <td style="width: 33%">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.PerfectFitVenetian)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">System: <b>@line.System</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Control: <b>@line.Control</b></td>
+                            <td style="width: 33%">Fitting Brackets: <b>@line.FittingBrackets</b></td>
+                            <td style="width: 33%">Slat Size: <b>@line.SlatSize</b></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Slat Colour: <b>@line.SlatColour</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.PerfectFitPleated)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">System: <b>@line.System</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Fitting Brackets: <b>@line.FittingBrackets</b></td>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.PerfectFitRoller)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Hardware: <b>@line.Hardware</b></td>
+                            <td style="width: 33%">Fitting Brackets: <b>@line.FittingBrackets</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.VeluxSkylight)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%;">Window Type: <b>@line.WindowType</b></td>
+                            <td style="width: 33%;">Window Size Ref: <b>@line.WindowSizeRef</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 66%" colspan="2">Fabric: <b>@line.Fabric</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.CurtainPole)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Pole Colour: <b>@line.PoleColour</b></td>
+                            <td style="width: 33%">Pole Size: <b>@line.PoleSize</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Rings Required: <b>@line.RingsRequired</b></td>
+                            <td style="width: 33%">Hooks Required: <b>@line.HooksRequired</b></td>
+                            <td style="width: 33%">Finial: <b>@line.Finial</b></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.CurtainTrack)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%">Track Width: <b>@line.TrackWidth</b></td>
+                            <td style="width: 33%">Track Colour: <b>@line.TrackColour</b></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%">Draw: <b>@line.Draw</b></td>
+                            <td style="width: 33%">Hooks Required: <b>@line.HooksRequired</b></td>
+                            <td></td>
+                        </tr>
+                    }
+                    else if (line.ProductType == ProductType.RepairSpecialRequest)
+                    {
+                        <tr>
+                            <td style="width: 33%;">Installation Height: <b>@line.InstallationHeight</b></td>
+                            <td style="width: 33%;">Under Guarantee: <b>@line.UnderGuarantee</b></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Description: @line.Description</td>
+                        </tr>
+                    }
+                </table>
+            </td>
+        </tr>
+    }
+</table>
+
+<div class="row" style="margin-top: 20px;">
+    <div class="col-sm-4">
+        <h4>SPECIAL INSTRUCTIONS</h4>
+        @appointment.SpecialInstructions
+    </div>
+    <div class="col-sm-3">
+        <h4></h4>
+        ORDER SIGNED: <b>@(appointment.OrderSigned ? "YES" : "NO")</b><br />
+        T&C LEFT: <b>@(appointment.TermsAndConditionsLeft ? "YES" : "NO") </b>
+    </div>
+    <div class="col-sm-2">
+    </div>
+    <div class="col-sm-3">
+        <h4></h4>
+        PRICE QUOTED: £@appointment.PriceQuoted<br />
+        @{
+            var depositPayment = appointment.Payments.FirstOrDefault(x => x.PaymentType == PaymentType.Deposit);
+        }
+
+        @if (depositPayment == null)
+        {
+            <text>NO DEPOSIT</text>
+        }
+        else
+        {
+            <text>
+            DEPOSIT RECEIVED: £@depositPayment.AmountPaid<br />
+            DEPOSIT METHOD: @depositPayment.PaymentMethod
+            </text>
+        }
+    </div>
+</div>

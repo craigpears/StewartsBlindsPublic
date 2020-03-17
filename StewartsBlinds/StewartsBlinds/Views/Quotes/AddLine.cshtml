@@ -1,0 +1,47 @@
+﻿@model AddQuoteLineViewModel
+
+@{
+    ViewData["Title"] = "Add Line";
+}
+
+
+<h2>New Line</h2>
+<div class="row mt-3">
+    <div class="col-sm-12">
+        <a class="btn btn-lg btn-secondary" asp-action="View" asp-controller="Appointments" asp-route-appointmentid="@Model.AppointmentId">Back</a>
+    </div>
+</div>
+<div class="box">
+    <form method="post">
+        <input type="hidden" value="@Model.AppointmentId" name="AppointmentId" />
+
+        <div class="form-group">
+            <label>Room Ref</label>
+            <input class="form-control" name="RoomRef" />
+        </div>
+        <div class="form-group">
+            <label>Width</label>
+            <input class="form-control" name="Width" type="number" />
+        </div>
+        <div class="form-group">
+            <label>Drop</label>
+            <input class="form-control" name="Drop" type="number" />
+        </div>
+        <div class="form-group">
+            <label>Installation Height</label>
+            <input class="form-control" name="InstallationHeight" type="number"/>
+        </div>
+
+        <div class="form-group">
+            <label>Product Type</label>
+            <select class="form-control" name="ProductType">
+                @foreach (var productType in (ProductType[])Enum.GetValues(typeof(ProductType)))
+                {
+                    <option value="@((int)productType)">@productType.GetDisplayName()</option>
+                }
+            </select>
+        </div>
+
+        <button class="btn btn-lg btn-block btn-success">Next</button>
+    </form>
+</div>

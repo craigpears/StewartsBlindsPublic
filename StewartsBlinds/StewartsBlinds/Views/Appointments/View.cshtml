@@ -1,0 +1,463 @@
+﻿@model AppointmentViewModel
+
+@{
+    ViewData["Title"] = "Appointment";
+}
+
+@{
+    bool showViewOrderPdf = false;
+    bool showAddLine = true;
+
+    var status = "";
+    var anyLines = Model.Appointment.QuoteLines.Any();
+
+    var payments = Model.Appointment.Payments;
+
+    var totalPaid = payments.Sum(x => x.AmountPaid);
+
+    var balance = Model.Appointment.PriceQuoted - totalPaid;
+
+    if (anyLines)
+    {
+        status = "Started";
+    }
+
+    if (Model.Appointment.OrderPlaced == false)
+    {
+        status = "Finalised";
+        showAddLine = false;
+        showViewOrderPdf = true;
+    }
+
+    if (Model.Appointment.OrderPlaced == true)
+    {
+        status = "Ordered";
+        showAddLine = false;
+        showViewOrderPdf = true;
+    }
+
+    if (Model.Appointment.OrderPlaced == true && balance == 0 && totalPaid > 0)
+    {
+        status = "Paid";
+        showViewOrderPdf = true;
+    }
+
+    var startedClass = status == "Started" ? "btn-primary" : "";
+    var finalisedClass = status == "Finalised" ? "btn-primary" : "";
+    var orderedClass = status == "Ordered" ? "btn-primary" : "";
+    var paidClass = status == "Paid" ? "btn-primary" : "";
+}
+<div class="row">
+    <div class="col-sm-12">
+        <h1 style="display:inline-block;">@Model.Appointment.Title @Model.Appointment.Surname</h1>
+        <a class="btn btn-secondary" asp-controller="Appointments" asp-action="Edit" asp-route-appointmentid="@Model.Appointment.Id" style="color: white; margin-bottom: 20px;"><i class="far fa-edit"></i></a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-7 col-md-12">
+        @if (status == "Started")
+        {
+            <a class="btn btn-lg btn-success" asp-action="Finalise" asp-controller="quotes" asp-route-id="@Model.Appointment.Id">Finalise Quote</a>
+        }
+        @if (status == "Finalised")
+        {
+            <a class="btn btn-lg btn-success" href="/umbraco/surface/quotes/markordered?AppointmentId=@(Model.Appointment.Id)">Mark as Ordered</a>
+        }
+        @if (showAddLine)
+        {
+            <a class="btn btn-lg btn-success" asp-controller="quotes" asp-action="AddLine" asp-route-appointmentid="@Model.Appointment.Id"><i class="fas fa-plus"></i> Add Line</a>
+        }
+        @if (showViewOrderPdf)
+        {
+            <a class="btn btn-lg btn-success" asp-controller="orders" asp-action="pdf" asp-route-id="@Model.Appointment.Id" target="_blank"><i class="far fa-file-pdf"></i> View Order PDF</a>
+        }
+        <button type="button" class="btn btn-lg btn-secondary" data-toggle="modal" data-target="#DeleteAppointmentModal"
+                onclick="$('#DeleteAppointmentLink').attr('href', '/Appointments/DeleteAppointment?id=' + @Model.Appointment.Id);">
+            Delete
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="box">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <h5>Customer Details</h5>
+                    <p>
+                        @Model.Appointment.Title @Model.Appointment.Surname <br />
+                        @Model.Appointment.CompanyName <br />
+                        @Model.Appointment.Address1 <br />
+                        @Model.Appointment.Address2 <br />
+                        @Model.Appointment.Town <br />
+                        @Model.Appointment.County <br />
+                        @Model.Appointment.Postcode <br />
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <h5>Delivery Address</h5>
+                    <p>
+                        @if (Model.Appointment.SameAsOrderAddress)
+                        {
+                            <text>Same as order address</text>
+                        }
+                        else
+                        {
+                            @Model.Appointment.DeliveryAddress1 <br />
+                            @Model.Appointment.DeliveryAddress2 <br />
+                            @Model.Appointment.DeliveryTown <br />
+                            @Model.Appointment.DeliveryCounty <br />
+                            @Model.Appointment.DeliveryPostcode
+                        }
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <h5>Customer Contact Details</h5>
+                    <p>
+                        @Model.Appointment.Telephone <br />
+                        @Model.Appointment.AlternativeTelephone <br />
+                        @Model.Appointment.Email
+                    </p>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <h5>&nbsp;</h5>
+                    <p>
+                        Estimator: @Model.Appointment.SalesUser.Name<br />
+                        Appointment Date: @Model.Appointment.AppointmentDate.ToString("dd/MM/yyyy")<br />
+                        Customer Type: @Model.Appointment.CustomerType.GetDisplayName()<br />
+                        @if (Model.Appointment.OrderPlaced == true)
+                        {
+                            <text>
+                                Order Date: @Model.Appointment.FinalisedDate.ToString("dd/MM/yyyy")<br />
+                            </text>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="box">
+            <h2>Order Details</h2>
+            @if (anyLines)
+            {
+                var quoteLines = Model.Appointment.QuoteLines;
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="white-space:nowrap;">Room Ref</th>
+                            <th style="white-space:nowrap;">Product Type</th>
+                            <th style="white-space:nowrap;">Measurements</th>
+                            <th style="white-space:nowrap;">Size Type</th>
+                            <th style="white-space:nowrap;">Details</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    @foreach (var line in quoteLines)
+                    {
+                        var contentType = line.ProductType;
+
+                        <tr>
+                            <td>@line.RoomRef</td>
+                            <td>@line.ProductType.GetDisplayName()</td>
+                            <td>@line.Width wide x @line.Drop drop</td>
+
+                            <td>
+                                @{                                 
+                                    var productTypesWithSizeType = new List<ProductType>
+                                    { ProductType.Vertical, ProductType.VerticalSlats, ProductType.VerticalHeadrail, ProductType.AluminiumVenetian,
+                                    ProductType.WoodenVenetian, ProductType.Fauxwood, ProductType.Roman, ProductType.Pleated, ProductType.IntuVenetian, ProductType.IntuPleated,
+                                    ProductType.PerfectFitVenetian, ProductType.PerfectFitPleated, ProductType.PerfectFitRoller};
+                                }
+                                @if (productTypesWithSizeType.Contains(line.ProductType))
+                                {
+                                    @line.SizeType
+                                }
+                            </td>
+                            <td>
+                                <p>
+                                    <span class="details-span">Installation Height: <b>@line.InstallationHeight</b></span>
+                                    @if (contentType == ProductType.Vertical)
+                                    {
+                                        <span class="details-span">Headrail Type: <b>@line.HeadrailType</b></span>
+                                        <span class="details-span">Control Type: <b>@line.ControlType</b></span>
+                                        <span class="details-span">Control Side: <b>@line.ControlSide</b></span>
+                                        <span class="details-span">Stacking: <b>@line.Stacking</b></span>
+                                        <span class="details-span">Brackets: <b>@line.Brackets</b></span>
+                                        <span class="details-span">Weights & Chain: <b>@line.WeightsChain</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.VerticalSlats)
+                                    {
+                                        <span class="details-span">Number of Slats: <b>@line.NumberOfSlats</b></span>
+                                        <span class="details-span">Sample Retained: <b>@line.SampleRetained</b></span>
+                                        <span class="details-span">Weights & Chain: <b>@line.WeightsChain</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.VerticalHeadrail)
+                                    {
+                                        <span class="details-span">Headrail Type: <b>@line.HeadrailType</b></span>
+                                        <span class="details-span">Control Type: <b>@line.ControlType</b></span>
+                                        <span class="details-span">Control Side: <b>@line.ControlSide</b></span>
+                                        <span class="details-span">Stacking: <b>@line.Stacking</b></span>
+                                    }
+                                    else if (contentType == ProductType.Roller)
+                                    {
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Control: <b>@line.Control</b></span>
+                                        <span class="details-span">Brackets: <b>@line.Brackets</b></span>
+                                        <span class="details-span">Scallop: <b>@line.Scallop</b></span>
+                                        <span class="details-span">Braid: <b>@line.Braid</b></span>
+                                        <span class="details-span">Endcaps: <b>@line.Endcaps</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.AluminiumVenetian)
+                                    {
+                                        <span class="details-span">Controls: <b>@line.Controls</b></span>
+                                        <span class="details-span">Hold Down Brackets: <b>@line.HoldDownBrackets</b></span>
+                                        <span class="details-span">Slatting: <b>@line.Slatting</b></span>
+                                        <span class="details-span">Slat Colour: <b>@line.SlatColour</b></span>
+                                    }
+                                    else if (contentType == ProductType.WoodenVenetian)
+                                    {
+                                        <span class="details-span">Slatting: <b>@line.Slatting</b></span>
+                                        <span class="details-span">Controls: <b>@line.Controls</b></span>
+                                        <span class="details-span">Brackets: <b>@line.Brackets</b></span>
+                                        <span class="details-span">Hold Down Brackets: <b>@line.HoldDownBrackets</b></span>
+                                        <span class="details-span">Slat Colour: <b>@line.SlatColour</b></span>
+                                        <span class="details-span">Tape: <b>@line.Tape</b></span>
+                                    }
+                                    else if (contentType == ProductType.Fauxwood)
+                                    {
+                                        <span class="details-span">Controls: <b>@line.Controls</b></span>
+                                        <span class="details-span">Slatting: <b>@line.Slatting</b></span>
+                                        <span class="details-span">Hold Down Brackets: <b>@line.HoldDownBrackets</b></span>
+                                        <span class="details-span">Slat Colour: <b>@line.SlatColour</b></span>
+                                        <span class="details-span">Tape: <b>@line.Tape</b></span>
+                                    }
+                                    else if (contentType == ProductType.Roman)
+                                    {
+                                        <span class="details-span">Controls: <b>@line.Controls</b></span>
+                                        <span class="details-span">Lining: <b>@line.Lining</b></span>
+                                    }
+                                    else if (contentType == ProductType.Pleated)
+                                    {
+                                        <span class="details-span">System: <b>@line.System</b></span>
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Controls: <b>@line.Controls</b></span>
+                                        <span class="details-span">Brackets: <b>@line.Brackets</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.IntuVenetian)
+                                    {
+                                        <span class="details-span">System: <b>@line.System</b></span>
+                                        <span class="details-span">Bead Depth: <b>@line.BeadDepth</b></span>
+                                        <span class="details-span">Profile: <b>@line.Profile</b></span>
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Slat Size: <b>@line.SlatSize</b></span>
+                                        <span class="details-span">Control: <b>@line.Control</b></span>
+                                        <span class="details-span">Slat Colour: <b>@line.SlatColour</b></span>
+                                    }
+                                    else if (contentType == ProductType.IntuPleated)
+                                    {
+                                        <span class="details-span">Bead Depth: <b>@line.BeadDepth</b></span>
+                                        <span class="details-span">Profile: <b>@line.Profile</b></span>
+                                        <span class="details-span">System: <b>@line.System</b></span>
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.PerfectFitVenetian)
+                                    {
+                                        <span class="details-span">System: <b>@line.System</b></span>
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Control: <b>@line.Control</b></span>
+                                        <span class="details-span">Fitting Brackets: <b>@line.FittingBrackets</b></span>
+                                        <span class="details-span">Slat Size: <b>@line.SlatSize</b></span>
+                                        <span class="details-span">Slat Colour: <b>@line.SlatColour</b></span>
+                                    }
+                                    else if (contentType == ProductType.PerfectFitPleated)
+                                    {
+                                        <span class="details-span">System: <b>@line.System</b></span>
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Fitting Brackets: <b>@line.FittingBrackets</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.PerfectFitRoller)
+                                    {
+                                        <span class="details-span">Hardware: <b>@line.Hardware</b></span>
+                                        <span class="details-span">Fitting Brackets: <b>@line.FittingBrackets</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.VeluxSkylight)
+                                    {
+                                        <span class="details-span">Window Type: <b>@line.WindowType</b></span>
+                                        <span class="details-span">Window Size Ref: <b>@line.WindowSizeRef</b></span>
+                                        <span class="details-span">Fabric: <b>@line.Fabric</b></span>
+                                    }
+                                    else if (contentType == ProductType.CurtainPole)
+                                    {
+                                        <span class="details-span">Pole Colour: <b>@line.PoleColour</b></span>
+                                        <span class="details-span">Pole Size: <b>@line.PoleSize</b></span>
+                                        <span class="details-span">Rings Required: <b>@line.RingsRequired</b></span>
+                                        <span class="details-span">Hooks Required: <b>@line.HooksRequired</b></span>
+                                        <span class="details-span">Finial: <b>@line.Finial</b></span>
+                                    }
+                                    else if (contentType == ProductType.CurtainTrack)
+                                    {
+                                        <span class="details-span">Track Width: <b>@line.TrackWidth</b></span>
+                                        <span class="details-span">Track Colour: <b>@line.TrackColour</b></span>
+                                        <span class="details-span">Draw: <b>@line.Draw</b></span>
+                                        <span class="details-span">Hooks Required: <b>@line.HooksRequired</b></span>
+                                    }
+                                    else if (contentType == ProductType.RepairSpecialRequest)
+                                    {
+                                        <span class="details-span">Under Guarantee: <b>@line.UnderGuarantee</b></span>
+                                        <span class="details-span">Description: @line.Description</span>
+                                    }
+                                </p>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#DeleteModal"
+                                        onclick="$('#DeleteLink').attr('href', '/Quotes/DeleteLine?id=' + @line.Id);">
+                                    Delete
+                                </button>
+                            </td>
+                            <td>
+                                <a class="btn btn-secondary" asp-action="EditLine" asp-controller="Quotes" asp-route-id="@line.Id" asp-route-editall="true">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            }
+            else
+            {
+                <p>No order lines yet</p>
+            }
+        </div>
+    </div>
+</div>
+
+@if (status == "Finalised" || status == "Ordered" || status == "Paid")
+{
+    <div class="box">
+        <div class="row">
+            <div class="col-lg-4 col-sm-12">
+                <b>Special Instructions</b><br />
+                @Model.Appointment.SpecialInstructions
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                Order Signed: <b>@(Model.Appointment.OrderSigned ? "Yes" : "No")</b><br />
+                T&C Left: <b>@(Model.Appointment.TermsAndConditionsLeft ? "Yes" : "No")</b><br />
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                Price Quoted: <b>£@Model.Appointment.PriceQuoted</b><br />
+            </div>
+        </div>
+    </div>
+}
+
+<div class="box">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>Payments</h2>
+        </div>
+        @if (status == "Ordered" || status == "Paid")
+        {
+            <div class="col-sm-12">
+                <p>
+                    <b>£@totalPaid</b> paid of <b>£@Model.Appointment.PriceQuoted</b> with <b>£@balance</b> left to pay
+                </p>
+            </div>
+            if (payments.Any())
+            {
+                <div class="col-sm-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount Paid</th>
+                                <th>Payment Method</th>
+                                <th>Payment Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach (var payment in payments)
+                            {
+                                <tr>
+                                    <td>@payment.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                    <td>£@payment.AmountPaid</td>
+                                    <td>@payment.PaymentMethod</td>
+                                    <td>@payment.PaymentType.GetDisplayName()</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="col-sm-12">
+                    <p>
+                        No payments yet
+                    </p>
+                </div>
+            }
+            <div class="col-sm-12">
+                <a class="btn btn-lg btn-success" asp-action="Add" asp-controller="Payments" asp-route-appointmentid="@Model.Appointment.Id">Add Payment</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-sm-12">
+                <p>
+                    No order yet
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal" id="DeleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Line</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this line?</p>
+            </div>
+            <div class="modal-footer">
+                <a id="DeleteLink" class="btn btn-primary">Delete</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="DeleteAppointmentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Appointment/Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this appointment and any associated order?</p>
+            </div>
+            <div class="modal-footer">
+                <a id="DeleteAppointmentLink" class="btn btn-primary">Delete</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

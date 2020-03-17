@@ -1,0 +1,124 @@
+﻿@model AddAppointmentViewModel
+
+@{
+    ViewData["Title"] = "Add Appointment";
+}
+
+
+<script>
+    function sameAsToggled()
+    {
+        var checked = $("#SameAsOrderAddress").is(":checked");
+        if (checked) {
+            $("#DeliveryFieldsContainer").hide();
+        }
+        else
+        {
+            $("#DeliveryFieldsContainer").show();
+        }
+    }
+</script>
+
+<h1>New Appointment</h1>
+
+<form method="post">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box">
+                <input type="hidden" name="SalesUserId" value="@Model.SalesUserId" />
+                <input type="hidden" name="AppointmentDate" value="@Model.AppointmentDate" />
+                <div class="form-group">
+                    <label>Title</label>
+                    <select class="form-control" name="Title">
+                        @foreach (var title in (Title[])Enum.GetValues(typeof(Title)))
+                        {
+                            <option>@title.GetDisplayName()</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Surname</label>
+                    <input class="form-control" name="Surname" />
+                </div>
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input class="form-control" name="CompanyName" />
+                </div>
+                <select class="form-control" name="CustomerType">
+                    @foreach (var customerType in (CustomerType[])Enum.GetValues(typeof(CustomerType)))
+                    {
+                        <option value="@((int)customerType)">@customerType.GetDisplayName()</option>
+                    }
+                </select>
+            </div>
+            <div class="box">
+                <h2>Customer Address</h2>
+                <div class="form-group">
+                    <label>Address 1</label>
+                    <input class="form-control" name="Address1" />
+                </div>
+                <div class="form-group">
+                    <label>Address 2</label>
+                    <input class="form-control" name="Address2" />
+                </div>
+                <div class="form-group">
+                    <label>Town</label>
+                    <input class="form-control" name="Town" />
+                </div>
+                <div class="form-group">
+                    <label>County</label>
+                    <input class="form-control" name="County" />
+                </div>
+                <div class="form-group">
+                    <label>Postcode</label>
+                    <input class="form-control" name="Postcode" />
+                </div>
+                <div class="form-group">
+                    <label>Tel</label>
+                    <input class="form-control" name="Telephone" />
+                </div>
+                <div class="form-group">
+                    <label>Alternative Tel</label>
+                    <input class="form-control" name="AlternativeTelephone" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-control" name="Email" />
+                </div>
+            </div>
+            <div class="box">
+                <h2>Delivery Address</h2>
+
+                <div class="form-group">
+                    <label for="SameAsOrderAddress">Same as Order Address</label>
+                    <input type="checkbox" name="SameAsOrderAddress" id="SameAsOrderAddress" onchange="sameAsToggled();" />
+                </div>
+                <div id="DeliveryFieldsContainer">
+                    <div class="form-group">
+                        <label>Delivery Address 1</label>
+                        <input class="form-control" name="DeliveryAddress1" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Address 2</label>
+                        <input class="form-control" name="DeliveryAddress2" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Town</label>
+                        <input class="form-control" name="DeliveryTown" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery County</label>
+                        <input class="form-control" name="DeliveryCounty" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Postcode</label>
+                        <input class="form-control" name="DeliveryPostcode" />
+                    </div>
+                </div>
+            </div>
+            <div class="box">
+                <button class="btn btn-lg btn-success">Create Appointment</button>
+            </div>
+        </div>
+    </div>
+</form>

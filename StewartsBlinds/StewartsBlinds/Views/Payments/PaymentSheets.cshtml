@@ -1,0 +1,38 @@
+﻿@model PaymentSheetsViewModel
+
+<h1>Payment Sheets</h1>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="box">
+            <table class="table">
+                <tr>
+                    <th>Dates</th>
+                    <th>Number of Payments</th>
+                    <th></th>
+                </tr>
+                @{
+                    var weeks = Model
+                        .Payments
+                        .Select(x => x.CreatedDate
+                        .AddDays(-(int)x.CreatedDate.DayOfWeek))
+                        .Select(x => new DateTime(x.Year, x.Month, x.Day, 0, 0, 0))
+                        .Distinct()
+                        .ToList();
+                }
+                
+                @foreach(var week in weeks)
+                {
+                    var payments = Model.Payments.Where(x => x.CreatedDate >= week && x.CreatedDate < week.AddDays(7)).ToList();
+
+                <tr>
+                    <td>@week.ToString("dd/MM/yyyy")</td>
+                    <td>@payments.Count()</td>
+                    <td><a class="btn btn-primary btn-lg" asp-action="PaymentSheet" asp-controller="Payments" asp-route-fromdate="@week.ToString("yyyy-MM-dd")" target="_blank">View Payment Sheet</a></td>
+                </tr>
+                }
+
+
+            </table>
+        </div>
+    </div>
+</div>

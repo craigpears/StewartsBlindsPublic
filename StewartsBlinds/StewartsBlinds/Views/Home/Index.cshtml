@@ -1,0 +1,160 @@
+﻿@model CalendarViewModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    .card {
+        margin-bottom: 5px;
+        max-width: 300px;
+    }
+
+    .card a {
+        color: white;
+    }
+</style>
+
+@{
+    //TODO: Put sales users back in
+    //var currentMember = Membership.GetUser();
+    //var roles = Roles.GetRolesForUser();
+    //var salesUser = roles.Contains("Sales");
+    //var showAll = bool.Parse(Request.Params["ShowAll"] ?? "false");
+    //if (!salesUser)
+    //{
+    //    showAll = false;
+    //}
+    bool showAll = true;
+    var fromDate = Model.FromDate ?? DateTime.Today;
+    var lastMonday = fromDate.AddDays(-(int)fromDate.DayOfWeek + (int)DayOfWeek.Monday).AddDays(-7);
+    var monday = lastMonday.AddDays(7);
+
+    var weeks = new List<Week> { new Week {
+                 Name = $"{lastMonday.ToString("MMMM dd yyyy")} - {lastMonday.AddDays(6).ToString("MMMM dd yyyy")}",
+                 StartDate = lastMonday
+                },
+                new Week {
+                 Name = $"{monday.ToString("MMMM dd yyyy")} - {monday.AddDays(6).ToString("MMMM dd yyyy")}",
+                 StartDate = monday
+                }
+            };
+
+    var days = new List<DayOfWeek>
+    {
+        DayOfWeek.Monday,
+        DayOfWeek.Tuesday,
+        DayOfWeek.Wednesday,
+        DayOfWeek.Thursday,
+        DayOfWeek.Friday,
+        DayOfWeek.Saturday
+    };
+
+    var timeslots = new List<Timeslot> {
+        new Timeslot { Name = "9-11", Time = new TimeSpan(9,0,0) },
+        new Timeslot { Name = "11-1", Time = new TimeSpan(11,0,0) },
+        new Timeslot { Name = "2-4", Time = new TimeSpan(14,0,0) },
+        new Timeslot { Name = "4-6", Time = new TimeSpan(16,0,0) }
+    };
+    }
+
+    <div class="row mt-6">
+        <div class="col-sm-12">
+
+            @if (!showAll)
+            {
+                <a class="btn btn-lg btn-success" href="/?showAll=true">Show All</a>
+            }
+            <a class="btn btn-lg btn-secondary" href="/?showAll=@showAll&fromDate=@Uri.EscapeDataString(fromDate.AddDays(-7).ToString("yyyy-MM-dd"))"><<</a>
+            <a class="btn btn-lg btn-secondary" href="/?showAll=@showAll&fromDate=@Uri.EscapeDataString(fromDate.AddDays(7).ToString("yyyy-MM-dd"))">>></a>
+        </div>
+    </div>
+
+
+<div class="row" style="margin-bottom: 20px;">
+    <div class="col-sm-12">
+
+        <div class="row">
+            @foreach (var week in weeks)
+            {
+                <div class="col-md-12">
+                    <h2>@week.Name</h2>
+
+                    @foreach (var user in Model.SalesUsers)
+                    {
+                        <div class="box">
+
+                            @if (showAll)
+                            {
+                                <h3><i class="fas fa-user"></i> @user.Name</h3>
+                            }
+
+                            <table class="table">
+                                <tr>
+                                    <th style="width: 10px;"></th>
+                                    @foreach (var day in days)
+                                    {
+                                        <th>@day.ToString()</th>
+                                    }
+                                </tr>
+                                @foreach(var timeslot in timeslots)
+                                {
+                                    <tr>
+                                        <td style="width: 10px;"><span style="white-space: nowrap; font-weight: bold">@timeslot.Name</span></td>
+                                        @foreach (var day in days)
+                                        {
+                                            var appointmentTime = week.StartDate.AddDays((int)day).Add(timeslot.Time);
+                                            <td>
+                                                @foreach (var appointment in Model.Appointments.Where(x => x.AppointmentDate == appointmentTime && x.SalesUserId == user.Id))
+                                                {
+                                                    bool hasQuoteLines = appointment.QuoteLines.Any();
+                                                    var cardClass = hasQuoteLines ? "bg-info" : "bg-dark";
+                                                    if (appointment.OrderPlaced == true)
+                                                    {
+                                                        cardClass = "bg-success";
+                                                    }
+                                                    else if (appointment.OrderPlaced == false)
+                                                    {
+                                                        cardClass = "bg-warning";
+                                                    }
+                                                    <div class="card @cardClass">
+                                                        <div class="card-body">
+                                                            <a asp-action="View" asp-controller="Appointments" asp-route-appointmentid="@appointment.Id">
+                                                                <h6 class="card-subtitle">@appointment.Title @appointment.Surname</h6>
+                                                                @if (appointment.OrderPlaced == false)
+                                                                {
+                                                                    <div><i class="far fa-clock"></i> Pending</div>
+                                                                }
+                                                                else if (appointment.OrderPlaced == true)
+                                                                {
+                                                                    <div><i class="fas fa-check"></i> Ordered</div>
+                                                                }
+                                                                else if (hasQuoteLines)
+                                                                {
+                                                                    <div><i class="fas fa-check"></i> Started</div>
+                                                                }
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (showAll)
+                                                {
+                                                    <a asp-controller="appointments" 
+                                                       asp-action="add"
+                                                       asp-route-salesuserid="@(user.Id)"
+                                                       asp-route-appointmentdate="@(appointmentTime.ToString("yyyy-MM-dd HH:mm:ss"))"
+                                                       >+ Add</a>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

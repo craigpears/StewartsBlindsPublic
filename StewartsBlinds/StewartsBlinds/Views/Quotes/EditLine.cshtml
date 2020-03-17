@@ -1,0 +1,60 @@
+﻿@model EditQuoteLineViewModel
+
+@{
+    ViewData["Title"] = "Edit Line";
+}
+
+<div class="box">
+    <form method="post">
+        <input type="hidden" value="@Model.QuoteLine.Id" name="Id" />
+        <input type="hidden" value="@Model.QuoteLine.AppointmentId" name="AppointmentId" />
+        <input type="hidden" value="@Model.QuoteLine.ProductType" name="ProductType" />
+
+        @if (Model.EditAll)
+        {
+            <div class="form-group">
+                <label>Room Ref</label>
+                <input class="form-control" name="RoomRef" value="@Model.QuoteLine.RoomRef" />
+            </div>
+            <div class="form-group">
+                <label>Width</label>
+                <input class="form-control" name="Width" type="number" value="@Model.QuoteLine.Width" />
+            </div>
+            <div class="form-group">
+                <label>Drop</label>
+                <input class="form-control" name="Drop" type="number" value="@Model.QuoteLine.Drop" />
+            </div>
+            <div class="form-group">
+                <label>Installation Height</label>
+                <input class="form-control" name="InstallationHeight" type="number" value="@Model.QuoteLine.InstallationHeight" />
+            </div>
+        }
+        else
+        {
+            <input type="hidden" value="@Model.QuoteLine.RoomRef" name="RoomRef" />
+            <input type="hidden" value="@Model.QuoteLine.Width" name="Width" />
+            <input type="hidden" value="@Model.QuoteLine.Drop" name="Drop" />
+            <input type="hidden" value="@Model.QuoteLine.InstallationHeight" name="InstallationHeight" />
+        }
+
+        @foreach (var fieldName in Model.ConfigurationOptions.Select(x => x.FieldName).Distinct())
+        {
+            string value = typeof(QuoteLine).GetProperty(fieldName).GetValue(Model.QuoteLine, null)?.ToString();
+            var options = Model.ConfigurationOptions.Where(x => x.FieldName == fieldName).Select(x => new SelectListItem { Text = x.Name, Value = x.Name, Selected = (value == x.Name) }).ToList();
+
+            <div class="form-group">
+                <label>@fieldName</label>
+                @if (!options.Any(x => !String.IsNullOrEmpty(x.Text)))
+                {
+                    <input name="@fieldName" class="form-control" value="@value" />
+                }
+                else
+                {
+                    <select name="@fieldName" class="form-control" asp-items="options"></select>
+                }
+            </div>
+        }
+
+        <button class="btn btn-lg btn-block btn-success">Save</button>
+    </form>
+</div>

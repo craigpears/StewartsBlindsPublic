@@ -1,0 +1,138 @@
+﻿@model EditAppointmentViewModel
+
+@{
+    ViewData["Title"] = "Edit Appointment";
+}
+
+
+<script>
+    function sameAsToggled()
+    {
+        var checked = $("#SameAsOrderAddress").is(":checked");
+        if (checked) {
+            $("#DeliveryFieldsContainer").hide();
+        }
+        else
+        {
+            $("#DeliveryFieldsContainer").show();
+        }
+    }
+</script>
+
+<h1>Edit Appointment</h1>
+
+<form method="post" asp-action="Edit" asp-controller="Appointments">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="box">
+               <input type="hidden" name="Id" value="@Model.Appointment.Id"/>
+               <div class="form-group">
+                    <label>Title</label>
+                    <select class="form-control" name="Title" asp-for="Appointment.Title">
+                        @foreach (var title in (Title[])Enum.GetValues(typeof(Title)))
+                        {
+                            <option>@title.GetDisplayName()</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Surname</label>
+                    <input class="form-control" name="Surname" asp-for="Appointment.Surname" />
+                </div>
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input class="form-control" name="CompanyName" asp-for="Appointment.CompanyName" />
+                </div>
+                <div class="form-group">
+                    <label>Customer Type</label>
+                    <select class="form-control" name="CustomerType" asp-for="Appointment.CustomerType">
+                        @foreach (var customerType in (CustomerType[])Enum.GetValues(typeof(CustomerType)))
+                        {
+                            <option value="@((int)customerType)">@customerType.GetDisplayName()</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="box">
+                <h2>Customer Address</h2>
+                <div class="form-group">
+                    <label>Address 1</label>
+                    <input class="form-control" name="Address1" asp-for="Appointment.Address1" />
+                </div>
+                <div class="form-group">
+                    <label>Address 2</label>
+                    <input class="form-control" name="Address2" asp-for="Appointment.Address2" />
+                </div>
+                <div class="form-group">
+                    <label>Town</label>
+                    <input class="form-control" name="Town" asp-for="Appointment.Town" />
+                </div>
+                <div class="form-group">
+                    <label>County</label>
+                    <input class="form-control" name="County" asp-for="Appointment.County" />
+                </div>
+                <div class="form-group">
+                    <label>Postcode</label>
+                    <input class="form-control" name="Postcode" asp-for="Appointment.Postcode" />
+                </div>
+                <div class="form-group">
+                    <label>Tel</label>
+                    <input class="form-control" name="Telephone" asp-for="Appointment.Telephone" />
+                </div>
+                <div class="form-group">
+                    <label>Alternative Tel</label>
+                    <input class="form-control" name="AlternativeTelephone" asp-for="Appointment.AlternativeTelephone" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-control" name="Email" asp-for="Appointment.Email" />
+                </div>
+            </div>
+            
+            <div class="box">
+                <h2>Delivery Address</h2>
+
+                <div class="form-group">
+                    <label for="SameAsOrderAddress">Same as Order Address</label>
+                    <input type="checkbox" name="SameAsOrderAddress" value="true" id="SameAsOrderAddress" onchange="sameAsToggled();" @(Model.Appointment.SameAsOrderAddress ? "checked" : "") />
+                </div>
+                <div id="DeliveryFieldsContainer">
+                    <div class="form-group">
+                        <label>Delivery Address 1</label>
+                        <input class="form-control" name="DeliveryAddress1" asp-for="Appointment.DeliveryAddress1"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Address 2</label>
+                        <input class="form-control" name="DeliveryAddress2" asp-for="Appointment.DeliveryAddress2" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Town</label>
+                        <input class="form-control" name="DeliveryTown" asp-for="Appointment.DeliveryTown"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery County</label>
+                        <input class="form-control" name="DeliveryCounty" asp-for="Appointment.DeliveryCounty" />
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Postcode</label>
+                        <input class="form-control" name="DeliveryPostcode" asp-for="Appointment.DeliveryPostcode" />
+                    </div>
+                </div>
+            </div>
+            <div class="box">
+                <h2>Sales User</h2>
+                <div class="form-group">
+                    <select class="form-control" name="SalesUserId" asp-for="Appointment.SalesUserId">
+                        @foreach(var user in Model.SalesUsers)
+                        {
+                            <option value="@user.Id">@user.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="box">
+                <button class="btn btn-lg btn-success">Save</button>
+            </div>
+        </div>
+    </div>
+</form>

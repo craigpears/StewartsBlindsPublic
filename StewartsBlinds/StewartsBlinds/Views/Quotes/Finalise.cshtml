@@ -1,0 +1,50 @@
+﻿@model FinaliseQuoteViewModel
+
+@{
+    ViewData["Title"] = "Finalise Quote";
+}
+
+<div class="row mt-3">
+    <div class="col-sm-12">
+        <a class="btn btn-lg btn-secondary" asp-action="View" asp-controller="Appointments" asp-route-id="@Model.Appointment.Id">Back</a>
+    </div>
+</div>
+<div class="box">
+    <div class="row mt-3">
+        <div class="col-sm-12">
+            <form method="post" asp-controller="quotes" asp-action="finalise">
+                <h2>Further Details</h2>
+                <input name="Id" value="@Model.Appointment.Id" type="hidden" />
+                <div class="form-group">
+                    <label>Special Instructions</label>
+                    <textarea name="SpecialInstructions" class="form-control">@Model.Appointment.SpecialInstructions</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Price Quoted</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">£</span>
+                        </div>
+                        <input class="form-control" name="PriceQuoted" id="PriceQuoted" value="@Model.Appointment.PriceQuoted" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Order Placed</label>
+                    <select class="form-control" name="OrderPlaced">
+                        <option value="False">No</option>
+                        <option value="True" selected="@(Model.Appointment.OrderPlaced == true ? "selected" : "")">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="OrderSigned">Order Signed</label>
+                    <input type="checkbox" name="OrderSigned" id="OrderSigned" value="true" />
+                </div>
+                <div class="form-group">
+                    <label for="TermsAndConditionsLeft">Terms And Conditions Left</label>
+                    <input type="checkbox" name="TermsAndConditionsLeft" id="TermsAndConditionsLeft" value="true" />
+                </div>
+                <button class="btn btn-lg btn-block btn-success">Finalise</button>
+            </form>
+        </div>
+    </div>
+</div>

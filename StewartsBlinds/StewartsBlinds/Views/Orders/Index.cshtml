@@ -1,0 +1,197 @@
+﻿@model OrdersViewModel
+
+@{
+    ViewData["Title"] = "Orders";
+}
+<h1>Orders</h1>
+
+@{
+
+
+    var pendingOrders = Model.Orders.Where(x => x.OrderPlaced == false).ToList();
+    var orders = Model.Orders.Where(x => x.OrderPlaced == true).ToList();
+    
+    
+    var factoryUser = true;
+    var officeUser = true;//TODO: Implement groups
+}
+
+<div class="row">
+    <div class="col-sm-3">
+        <div class="list-group list-group-flush">
+            @foreach (var filter in (OrdersFilter[])Enum.GetValues(typeof(OrdersFilter)))
+            {
+            <a asp-controller="Orders" asp-action="Index" asp-route-OrdersFilter="@((int)filter)"
+               class="list-group-item list-group-item-action @(Model.OrdersFilter == filter ? "active" : "")">
+                @filter.GetDisplayName()
+                @switch (filter)
+                {
+                    case OrdersFilter.Ordered:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == true)</span>
+                        break;
+                    case OrdersFilter.ReadyToFit:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderStatus == OrderStatus.ReadyToBeFit)</span>
+                        break;
+                    case OrdersFilter.NotSeenByOffice:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == true && !x.SeenByOffice)</span>
+                        break;
+                    case OrdersFilter.NotSeenByFactory:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == true && !x.SeenByFactory)</span>
+                        break;
+                    case OrdersFilter.NotMadeDeposit:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == true && !x.Payments.Any())</span>
+                        break;
+                    case OrdersFilter.NotFullyPaid:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == true && !x.FullyPaid)</span>
+                        break;
+                    case OrdersFilter.Pending:
+                        <span class="badge badge-primary badge-pill">@Model.Orders.Count(x => x.OrderPlaced == false)</span>
+                        break;
+                }
+
+            </a>
+            }
+            
+        </div>
+    </div>
+    <div class="col-sm-9">
+        @switch (Model.OrdersFilter)
+        {
+            case OrdersFilter.Ordered:
+            case OrdersFilter.ReadyToFit:
+            case OrdersFilter.NotSeenByOffice:
+            case OrdersFilter.NotSeenByFactory:
+            case OrdersFilter.NotMadeDeposit:
+            case OrdersFilter.NotFullyPaid:
+                var ordersToShow = Model.Orders;
+
+                switch (Model.OrdersFilter)
+                {
+                    case OrdersFilter.ReadyToFit:
+                        ordersToShow = ordersToShow.Where(x => x.OrderStatus == OrderStatus.ReadyToBeFit).ToList();
+                        break;
+                    case OrdersFilter.NotSeenByOffice:
+                        ordersToShow = ordersToShow.Where(x => !x.SeenByOffice).ToList();
+                        break;
+                    case OrdersFilter.NotSeenByFactory:
+                        ordersToShow = ordersToShow.Where(x => !x.SeenByFactory).ToList();
+                        break;
+                    case OrdersFilter.NotMadeDeposit:
+                        ordersToShow = ordersToShow.Where(x => !x.Payments.Any()).ToList();
+                        break;
+                    case OrdersFilter.NotFullyPaid:
+                        ordersToShow = ordersToShow.Where(x => !x.FullyPaid).ToList();
+                        break;
+                }
+
+                <div class="box" style="margin: 0px;">
+                    <h2>Ordered</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;"></th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        @foreach (var order in ordersToShow.OrderByDescending(x => x.FinalisedDate))
+                        {
+                            var totalPaid = order.Payments.Sum(x => x.AmountPaid);
+                            <tr>
+                                <td>
+                                    <span @switch (order.OrderStatus) { case OrderStatus.WorkInProgress: <text> class="badge badge-danger" </text>  break; case OrderStatus.PartReady: <text> class="badge badge-warning" </text>  break; case OrderStatus.ReadyToBeFit: <text> class="badge badge-success" </text> break; }>
+                                        @order.OrderStatus.GetDisplayName()
+                                    </span>@if (totalPaid != order.PriceQuoted)
+                                    {
+                                        <span class="badge badge-danger">Not Paid</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-success">Paid</span>
+                                    }@if (!order.SeenByFactory)
+                                    {
+                                        <span class="badge badge-danger">Not seen by factory</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-success">Seen by factory</span>
+                                    }
+
+                                    @if (!order.SeenByOffice)
+                                    {
+                                        <span class="badge badge-danger">Not seen by office</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-success">Seen by office</span>
+                                    }
+                                </td>
+                                <td>@order.Title @order.Surname</td>
+                                <td>@order.FinalisedDate.ToString("dd/MM/yyyy")</td>
+                                <td>£@order.PriceQuoted</td>
+                                <td>
+                                    @{
+
+                                    }
+                                    £@totalPaid
+
+
+                                </td>
+                                <td>
+                                    <a class="btn btn-primary" asp-controller="Appointments" asp-action="View" asp-route-appointmentid="@order.Id">View</a>
+                                    @if (!order.SeenByOffice)
+                                    {
+                                        <a class="btn btn-success" asp-action="MarkSeenByOffice" asp-route-id="@order.Id">Mark Seen by Office</a>
+                                    }
+                                    @if (!order.SeenByFactory)
+                                    {
+                                        <a class="btn btn-success" asp-action="MarkSeenByFactory" asp-route-id="@order.Id">Mark Seen by Factory</a>
+                                    }
+                                    @if (order.OrderStatus == OrderStatus.WorkInProgress)
+                                    {
+                                        <a class="btn btn-success" asp-action="MarkPartReady" asp-route-id="@order.Id">Mark Part Ready</a>
+                                    }
+                                    @if (order.OrderStatus == OrderStatus.PartReady)
+                                    {
+                                        <a class="btn btn-success" asp-action="MarkReady" asp-route-id="@order.Id">Mark Ready</a>
+                                    }
+
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+                break;
+            case OrdersFilter.Pending:
+                <div class="box" style="margin: 0px;">
+                    <h2>Pending</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        @foreach (var order in pendingOrders.OrderBy(x => x.FinalisedDate))
+                        {
+                            <tr>
+                                <td>@order.Title @order.Surname</td>
+                                <td>@order.FinalisedDate.ToString("dd/MM/yyyy")</td>
+                                <td>£@order.PriceQuoted</td>
+                                <td>
+                                    <a class="btn btn-lg btn-primary" asp-controller="Appointments" asp-action="View" asp-route-appointmentid="@order.Id">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+                break;
+        }
+
+    </div>
+</div>

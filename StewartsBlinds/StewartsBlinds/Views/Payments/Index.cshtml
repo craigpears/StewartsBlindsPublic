@@ -1,0 +1,42 @@
+﻿@model PaymentsViewModel
+
+<h1>Payments</h1>
+
+<div class="box">
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 50px;"></th>
+                <th>Created</th>
+                <th>Amount Paid</th>
+                <th>Payment Method</th>
+                <th>Payment Type</th>
+                <th>Taken By</th>
+                <th></th>
+            </tr>
+        </thead>
+        @foreach (var payment in Model.Payments)
+        {
+        <tr>
+            <td>
+                @if (payment.Confirmed)
+                {
+                    <span class="badge badge-success">Confirmed</span>
+                }
+                    </td>
+            <td>@payment.CreatedDate.ToString("dd/MM/yyyy")</td>
+            <td>£@payment.AmountPaid</td>
+            <td>@payment.PaymentMethod</td>
+            <td>@payment.PaymentType</td>
+            <td>@payment.TakenBy</td>
+            <td>
+                <a class="btn btn-primary" asp-controller="Appointments" asp-action="View" asp-route-appointmentid="@payment.AppointmentId">View Order</a>
+                @if(!payment.Confirmed)
+                {
+                    <a class="btn btn-primary" asp-action="ConfirmPayment" asp-route-id="@payment.Id">Confirm Payment</a>
+                }
+            </td>
+        </tr>
+        }
+    </table>
+</div>

@@ -1,0 +1,151 @@
+﻿@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/dataviz.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+
+<h1>Dashboard</h1>
+
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>Orders Funnel</h2>
+            <div class="box">
+                <div id="funnelchartdiv"></div>
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <h2>Order Lines by Product Type</h2>
+            <div class="box">
+                <div id="piechartdiv"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Styles -->
+<style>
+    #funnelchartdiv {
+        width: 100%;
+        height: 500px;
+    }
+
+    #piechartdiv {
+        width: 100%;
+        height: 500px;
+    }
+</style>
+
+<!-- HTML -->
+    
+
+<script>
+    // Themes begin
+    am4core.useTheme(am4themes_dataviz);
+    am4core.useTheme(am4themes_animated);
+    // Themes end
+
+    var chart = am4core.create("funnelchartdiv", am4charts.SlicedChart);
+    chart.hiddenState.properties.opacity = 0; // this makes initial fade in effect
+
+    chart.data = [{
+        "name": "Not Ordered",
+        "value": @Model.OrdersFunnel.NotOrdered
+    }, {
+        "name": "Pending",
+        "value": @Model.OrdersFunnel.Pending
+    }, {
+        "name": "Ordered",
+        "value": @Model.OrdersFunnel.Ordered
+    }, {
+        "name": "Payment Taken",
+        "value": @Model.OrdersFunnel.PaymentTaken
+    }, {
+        "name": "Fully Paid",
+        "value": @Model.OrdersFunnel.FullyPaid
+    }];
+
+    var series = chart.series.push(new am4charts.FunnelSeries());
+    series.colors.step = 2;
+    series.dataFields.value = "value";
+    series.dataFields.category = "name";
+    series.alignLabels = true;
+
+    series.labelsContainer.paddingLeft = 15;
+    series.labelsContainer.width = 200;
+
+    //series.orientation = "horizontal";
+    //series.bottomRatio = 1;
+
+    chart.legend = new am4charts.Legend();
+    chart.legend.position = "left";
+    chart.legend.valign = "bottom";
+    chart.legend.margin(5, 5, 20, 5);
+
+    am4core.useTheme(am4themes_animated);
+    // Themes end
+
+    // Create chart instance
+    var chart = am4core.create("piechartdiv", am4charts.PieChart);
+
+    // Set data
+    var selected;
+    var types = [
+        @foreach(var count in Model.ProductTypeBarChart.Counts)
+        {
+            <text>
+            {
+                type: "@count.ProductType.GetDisplayName()",
+                percent: @((Double)count.Count / Model.ProductTypeBarChart.Counts.Sum(x => x.Count) * 100)
+            },
+            </text>
+        }
+    ];
+
+    // Add data
+    chart.data = generateChartData();
+
+    // Add and configure Series
+    var pieSeries = chart.series.push(new am4charts.PieSeries());
+    pieSeries.dataFields.value = "percent";
+    pieSeries.dataFields.category = "type";
+    pieSeries.slices.template.propertyFields.fill = "color";
+    pieSeries.slices.template.propertyFields.isActive = "pulled";
+    pieSeries.slices.template.strokeWidth = 0;
+
+    function generateChartData() {
+        var chartData = [];
+        for (var i = 0; i < types.length; i++) {
+            if (i == selected) {
+                for (var x = 0; x < types[i].subs.length; x++) {
+                    chartData.push({
+                        type: types[i].subs[x].type,
+                        percent: types[i].subs[x].percent,
+                        color: types[i].color,
+                        pulled: true
+                    });
+                }
+            } else {
+                chartData.push({
+                    type: types[i].type,
+                    percent: types[i].percent,
+                    color: types[i].color,
+                    id: i
+                });
+            }
+        }
+        return chartData;
+    }
+
+    pieSeries.slices.template.events.on("hit", function (event) {
+        if (event.target.dataItem.dataContext.id != undefined) {
+            selected = event.target.dataItem.dataContext.id;
+        } else {
+            selected = undefined;
+        }
+        chart.data = generateChartData();
+    });
+</script>

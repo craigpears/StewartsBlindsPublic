@@ -1,0 +1,47 @@
+﻿body {
+    background-color: #EEE;
+}
+
+.box {
+    background-color: #FFF;
+    margin-top: 30px;
+    padding: 20px;
+}
+
+.container-fluid {
+    font-family: "Arial";
+    padding: 25px;
+}
+
+@media screen and (min-width: 1200px) {
+    .container-fluid {
+        padding: 50px 100px;
+    }
+}
+
+.details-span {
+    white-space: nowrap;
+    margin-right: 5px;
+}
+
+.align-right {
+    text-align: right;
+}
+
+h1 {
+    margin-bottom: 35px;
+}
+
+h2, h3 {
+    margin: 25px 0px;
+}
+
+h5 {
+    margin-top: 5px;
+}
+
+input[type=checkbox] {
+    width: 30px;
+    height: 30px;
+    vertical-align: middle;
+}
